@@ -1,29 +1,25 @@
-type WeatherData = {
-  city: string;
-  temperature: number;
-  description: string;
-  humidity: number;
-  windSpeed: number;
-  icon: string;
-};
+import { WeatherData } from "@/types";
 
 export default function CurrentWeatherCard({ data }: { data: WeatherData }) {
   return (
-    <div className="bg-white p-6 rounded-lg shadow mt-8 max-w-md mx-auto text-left">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-semibold">{data.city}</h2>
+    <div className="bg-white p-6 rounded shadow text-center max-w-md mx-auto mt-6">
+      <h2 className="text-xl font-semibold mb-2">{data.city}</h2>
+      <div className="flex justify-center items-center gap-3 mb-2">
+        <span className="text-4xl font-bold">{data.temperature}°C</span>
         <img
           src={`https://openweathermap.org/img/wn/${data.icon}@2x.png`}
           alt={data.description}
           className="w-12 h-12"
         />
       </div>
-      <p className="text-4xl font-bold">{data.temperature}°C</p>
-      <p className="text-gray-700 capitalize">{data.description}</p>
-      <div className="mt-4 text-sm text-gray-600">
-        <p>Humidity: {data.humidity}%</p>
-        <p>Wind: {data.windSpeed} km/h</p>
-      </div>
+      <p className="text-gray-600 capitalize">{data.description}</p>
+      <p className="text-sm text-gray-500">
+        Min: {data.minTemp}° / Max: {data.maxTemp}°
+      </p>
+      <p className="text-sm text-gray-500 mt-2">
+        Humidity: {data.humidity}% <br />
+        Wind: {data.windSpeed} km/h
+      </p>
     </div>
   );
 }

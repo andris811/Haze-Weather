@@ -1,6 +1,8 @@
 export type WeatherData = {
   city: string;
   temperature: number;
+  minTemp: number;
+  maxTemp: number;
   description: string;
   humidity: number;
   windSpeed: number;
@@ -9,7 +11,8 @@ export type WeatherData = {
 
 export type ForecastData = {
   date: string;
-  temperature: number;
+  minTemp: number;
+  maxTemp: number;
   description: string;
   icon: string;
 };
