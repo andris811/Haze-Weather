@@ -2,7 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import SearchBar from "@/components/SearchBar";
-import { fetchCurrentWeather, fetchForecast } from "@/lib/api";
+import {
+  fetchCurrentWeather,
+  fetchForecast,
+  fetchCurrentWeatherByCoords,
+  fetchForecastByCoords,
+} from "@/lib/api";
 import CurrentWeatherCard from "@/components/CurrentWeatherCard";
 import ForecastCard from "@/components/ForecastCard";
 import { WeatherData, ForecastData } from "@/types";
@@ -38,6 +43,37 @@ export default function Home() {
       localStorage.setItem("unit", autoUnit);
     }
   }, []);
+
+  // Auto-fetch user location on first load (only if no city saved)
+  useEffect(() => {
+    if (!city && typeof window !== "undefined" && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          setLoading(true);
+          setError("");
+
+          try {
+            const result = await fetchCurrentWeatherByCoords(latitude, longitude, unit);
+            const forecastData = await fetchForecastByCoords(latitude, longitude, unit);
+            setCity(result.city);
+            setWeather(result);
+            setForecast(forecastData);
+            localStorage.setItem("lastCity", result.city);
+          } catch (err) {
+            console.error(err);
+            setError("Could not fetch weather for your location.");
+          } finally {
+            setLoading(false);
+          }
+        },
+        (err) => {
+          console.warn("Geolocation failed:", err);
+          // No city fallback, wait for manual search
+        }
+      );
+    }
+  }, [city, unit]);
 
   // Persist unit setting to localStorage when it changes
   useEffect(() => {
