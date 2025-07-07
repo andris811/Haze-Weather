@@ -7,6 +7,7 @@ import {
   fetchForecast,
   fetchCurrentWeatherByCoords,
   fetchForecastByCoords,
+  getCityFromCoords,
 } from "@/lib/api";
 import CurrentWeatherCard from "@/components/CurrentWeatherCard";
 import ForecastCard from "@/components/ForecastCard";
@@ -54,8 +55,16 @@ export default function Home() {
           setError("");
 
           try {
-            const result = await fetchCurrentWeatherByCoords(latitude, longitude, unit);
-            const forecastData = await fetchForecastByCoords(latitude, longitude, unit);
+            const result = await fetchCurrentWeatherByCoords(
+              latitude,
+              longitude,
+              unit
+            );
+            const forecastData = await fetchForecastByCoords(
+              latitude,
+              longitude,
+              unit
+            );
             setCity(result.city);
             setWeather(result);
             setForecast(forecastData);
@@ -104,6 +113,34 @@ export default function Home() {
     },
     [unit]
   );
+
+  // On load, if a lastCity is saved, try to get the user's current city using geolocation.
+  // If the current city differs from the saved one, automatically update it by calling handleSearch.
+  // This ensures the weather always reflects the user's real location when visiting the site.
+  useEffect(() => {
+    const tryAutoDetectCity = async () => {
+      if (!localStorage.getItem("lastCity")) return; // already handled
+
+      try {
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+          const userCity = await getCityFromCoords(
+            pos.coords.latitude,
+            pos.coords.longitude
+          );
+          const savedCity = localStorage.getItem("lastCity") || "";
+
+          // If different city, auto-switch
+          if (userCity && userCity.toLowerCase() !== savedCity.toLowerCase()) {
+            handleSearch(userCity);
+          }
+        });
+      } catch {
+        console.warn("Geolocation failed or denied");
+      }
+    };
+
+    tryAutoDetectCity();
+  }, [handleSearch]);
 
   // When unit changes and city is known, re-fetch weather data
   useEffect(() => {

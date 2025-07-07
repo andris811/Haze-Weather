@@ -177,3 +177,15 @@ export async function fetchForecastByCoords(
 
   return forecast;
 }
+
+export async function getCityFromCoords(lat: number, lon: number): Promise<string> {
+  const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
+  const res = await fetch(
+    `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${apiKey}`
+  );
+
+  if (!res.ok) throw new Error("Failed to reverse geocode");
+
+  const data = await res.json();
+  return data[0]?.name || "";
+}
