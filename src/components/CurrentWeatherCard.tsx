@@ -19,7 +19,7 @@ export default function CurrentWeatherCard({ data, unit }: { data: WeatherData; 
       </p>
       <p className="text-sm text-gray-500 mt-2">
         Humidity: {data.humidity}% <br />
-        Wind: {data.windSpeed} {unit === "imperial" ? "mph" : "km/h"} km/h
+        Wind: {data.windSpeed} {unit === "imperial" ? "mph" : "km/h"}
       </p>
     </div>
   );
