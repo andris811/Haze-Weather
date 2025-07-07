@@ -1,11 +1,12 @@
 import { WeatherData } from "@/types";
 
-export default function CurrentWeatherCard({ data }: { data: WeatherData }) {
+export default function CurrentWeatherCard({ data, unit }: { data: WeatherData; unit: string }) {
+  const unitSymbol = unit === "metric" ? "°C" : "°F";
   return (
     <div className="bg-white p-6 rounded shadow text-center max-w-md mx-auto mt-6">
       <h2 className="text-xl font-semibold mb-2">{data.city}</h2>
       <div className="flex justify-center items-center gap-3 mb-2">
-        <span className="text-4xl font-bold">{data.temperature}°C</span>
+        <span className="text-4xl font-bold">{data.temperature}{unitSymbol}</span>
         <img
           src={`https://openweathermap.org/img/wn/${data.icon}@2x.png`}
           alt={data.description}
@@ -18,7 +19,7 @@ export default function CurrentWeatherCard({ data }: { data: WeatherData }) {
       </p>
       <p className="text-sm text-gray-500 mt-2">
         Humidity: {data.humidity}% <br />
-        Wind: {data.windSpeed} km/h
+        Wind: {data.windSpeed} {unit === "imperial" ? "mph" : "km/h"} km/h
       </p>
     </div>
   );

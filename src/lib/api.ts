@@ -75,12 +75,12 @@ type ForecastAPIItem = {
   }[];
 };
 
-export async function fetchCurrentWeather(city: string): Promise<WeatherData> {
+export async function fetchCurrentWeather(city: string, unit: "metric" | "imperial"): Promise<WeatherData> {
   const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
   const res = await fetch(
     `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(
       city
-    )}&appid=${apiKey}&units=metric`
+    )}&appid=${apiKey}&units=${unit}`
   );
 
   if (!res.ok) {
@@ -101,12 +101,12 @@ export async function fetchCurrentWeather(city: string): Promise<WeatherData> {
   };
 }
 
-export async function fetchForecast(city: string): Promise<ForecastData[]> {
+export async function fetchForecast(city: string, unit: "metric" | "imperial"): Promise<ForecastData[]> {
   const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
   const res = await fetch(
     `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(
       city
-    )}&appid=${apiKey}&units=metric`
+    )}&appid=${apiKey}&units=${unit}`
   );
 
   if (!res.ok) {
