@@ -27,6 +27,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [forecast, setForecast] = useState<ForecastData[]>([]);
   const [unit, setUnit] = useState<"metric" | "imperial">("metric");
+  const [detectedCity, setDetectedCity] = useState("");
+  const [showSwitchPrompt, setShowSwitchPrompt] = useState(false);
 
   // On initial load: get saved unit or auto-detect from locale
   useEffect(() => {
@@ -119,7 +121,7 @@ export default function Home() {
   // This ensures the weather always reflects the user's real location when visiting the site.
   useEffect(() => {
     const tryAutoDetectCity = async () => {
-      if (!localStorage.getItem("lastCity")) return; // already handled
+      const savedCity = localStorage.getItem("lastCity") || "";
 
       try {
         navigator.geolocation.getCurrentPosition(async (pos) => {
@@ -127,11 +129,10 @@ export default function Home() {
             pos.coords.latitude,
             pos.coords.longitude
           );
-          const savedCity = localStorage.getItem("lastCity") || "";
 
-          // If different city, auto-switch
           if (userCity && userCity.toLowerCase() !== savedCity.toLowerCase()) {
-            handleSearch(userCity);
+            setDetectedCity(userCity); // Save detected city
+            setShowSwitchPrompt(true); // Show confirmation prompt
           }
         });
       } catch {
@@ -140,7 +141,7 @@ export default function Home() {
     };
 
     tryAutoDetectCity();
-  }, [handleSearch]);
+  }, []);
 
   // When unit changes and city is known, re-fetch weather data
   useEffect(() => {
@@ -185,6 +186,32 @@ export default function Home() {
           °F
         </span>
       </div>
+
+      {showSwitchPrompt && (
+        <div className="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded mb-4 max-w-xl mx-auto">
+          <p className="mb-2">
+            You&#39;re in <strong>{detectedCity}</strong>. Switch to this city&#39;s
+            weather?
+          </p>
+          <div className="flex justify-center gap-4">
+            <button
+              onClick={() => {
+                handleSearch(detectedCity);
+                setShowSwitchPrompt(false);
+              }}
+              className="px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Yes
+            </button>
+            <button
+              onClick={() => setShowSwitchPrompt(false)}
+              className="px-4 py-1 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+            >
+              No
+            </button>
+          </div>
+        </div>
+      )}
 
       <SearchBar onSearch={handleSearch} />
 
