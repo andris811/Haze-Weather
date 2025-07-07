@@ -30,12 +30,16 @@ export async function fetchCurrentWeather(city: string, unit: "metric" | "imperi
   return {
     city: data.name,
     temperature: Math.round(data.main.temp),
+    feelsLike: Math.round(data.main.feels_like),
     minTemp: Math.round(data.main.temp_min),
     maxTemp: Math.round(data.main.temp_max),
     description: data.weather[0].description,
     humidity: data.main.humidity,
     windSpeed: Math.round(data.main.wind?.speed || data.wind.speed),
     icon: data.weather[0].icon,
+    sunrise: data.sys.sunrise,
+    sunset: data.sys.sunset,
+    timezone: data.timezone,
   };
 }
 
