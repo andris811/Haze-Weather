@@ -228,7 +228,6 @@
 //   );
 // }
 
-
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -340,74 +339,79 @@ export default function Home() {
 
   // Location logic (callable by button or effect)
   const checkLocation = async () => {
-  if (typeof window === "undefined" || !("geolocation" in navigator)) {
-    setGeoError("Geolocation not supported");
-    return;
-  }
+    if (typeof window === "undefined" || !("geolocation" in navigator)) {
+      setGeoError("Geolocation not supported");
+      return;
+    }
 
-  setIsDetectingLocation(true);
-  setGeoError("");
+    setIsDetectingLocation(true);
+    setGeoError("");
 
-  try {
-    const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
-        timeout: 10000,
-        maximumAge: 60 * 1000,
-        enableHighAccuracy: true,
-      });
-    });
+    try {
+      const position = await new Promise<GeolocationPosition>(
+        (resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            timeout: 10000,
+            maximumAge: 60 * 1000,
+            enableHighAccuracy: true,
+          });
+        }
+      );
 
-    const { latitude, longitude } = position.coords;
-    const newCoords = { lat: latitude, lon: longitude };
+      const { latitude, longitude } = position.coords;
+      const newCoords = { lat: latitude, lon: longitude };
 
-    // Save coords
-    localStorage.setItem("currentLat", latitude.toString());
-    localStorage.setItem("currentLon", longitude.toString());
-    localStorage.setItem("lastCoords", JSON.stringify(newCoords));
+      // Save coords
+      localStorage.setItem("currentLat", latitude.toString());
+      localStorage.setItem("currentLon", longitude.toString());
+      localStorage.setItem("lastCoords", JSON.stringify(newCoords));
 
-    const weatherData = await fetchWeatherByCoords(latitude, longitude, unit);
-    const detectedCity = weatherData.city;
+      const weatherData = await fetchWeatherByCoords(latitude, longitude, unit);
+      const detectedCity = weatherData.city;
 
-    const lastCity = localStorage.getItem("lastCity");
+      const lastCity = localStorage.getItem("lastCity");
 
-    if (!lastCity) {
-      // First visit – set location automatically
-      localStorage.setItem("lastCity", detectedCity);
-      handleSearch(detectedCity, newCoords);
-    } else {
-      const savedCoords = JSON.parse(localStorage.getItem("lastCoords") || "{}");
-
-      const distance = getDistance(savedCoords, newCoords);
-
-      if (distance > 1) {
-        const confirmSwitch = window.confirm(
-          `You're currently in ${detectedCity}. Switch to this location?`
+      if (!lastCity) {
+        // First visit – set location automatically
+        localStorage.setItem("lastCity", detectedCity);
+        handleSearch(detectedCity, newCoords);
+      } else {
+        const savedCoords = JSON.parse(
+          localStorage.getItem("lastCoords") || "{}"
         );
 
-        if (confirmSwitch) {
-          localStorage.setItem("lastCity", detectedCity);
-          handleSearch(detectedCity, newCoords);
+        const distance = getDistance(savedCoords, newCoords);
+
+        if (distance > 1) {
+          const confirmSwitch = window.confirm(
+            `You're currently in ${detectedCity}. Switch to this location?`
+          );
+
+          if (confirmSwitch) {
+            localStorage.setItem("lastCity", detectedCity);
+            handleSearch(detectedCity, newCoords);
+          }
         }
       }
-    }
-  } catch (err: any) {
-    console.warn("Geolocation error:", err.code, err.message);
-    setGeoError(
-      err.code === 1
-        ? "Permission denied. Please allow location access."
-        : err.code === 2
-        ? "Location unavailable. Try again later."
-        : err.code === 3
-        ? "Location request timed out."
-        : "Unknown location error."
-    );
+    } catch (err) {
+      const error = err as GeolocationPositionError;
+      console.warn("Geolocation error:", error.code, error.message);
+      setGeoError(
+        error.code === 1
+          ? "Permission denied. Please allow location access."
+          : error.code === 2
+          ? "Location unavailable. Try again later."
+          : error.code === 3
+          ? "Location request timed out."
+          : "Unknown location error."
+      );
 
-    // Fallback to last city if any
-    if (city) handleSearch(city);
-  } finally {
-    setIsDetectingLocation(false);
-  }
-};
+      // Fallback to last city if any
+      if (city) handleSearch(city);
+    } finally {
+      setIsDetectingLocation(false);
+    }
+  };
 
   // Optional auto-run on desktop only (iPhone Safari blocks this)
   useEffect(() => {
