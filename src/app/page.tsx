@@ -2,7 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import SearchBar from "@/components/SearchBar";
-import { fetchCurrentWeather, fetchForecast, fetchWeatherByCoords } from "@/lib/api";
+import {
+  fetchCurrentWeather,
+  fetchForecast,
+  fetchWeatherByCoords,
+  fetchForecastByCoords,
+} from "@/lib/api";
 import CurrentWeatherCard from "@/components/CurrentWeatherCard";
 import ForecastCard from "@/components/ForecastCard";
 import { WeatherData, ForecastData } from "@/types";
@@ -24,7 +29,10 @@ export default function Home() {
 
   // On initial load: get saved unit or auto-detect from locale
   useEffect(() => {
-    const savedUnit = localStorage.getItem("unit") as "metric" | "imperial" | null;
+    const savedUnit = localStorage.getItem("unit") as
+      | "metric"
+      | "imperial"
+      | null;
 
     if (savedUnit) {
       setUnit(savedUnit);
@@ -43,16 +51,31 @@ export default function Home() {
 
   // Search for city and fetch current + forecast data
   const handleSearch = useCallback(
-    async (searchCity: string) => {
+    async (
+      searchCity: string,
+      coords?: { lat: number; lon: number } | null
+    ) => {
       setCity(searchCity);
-      localStorage.setItem("lastCity", searchCity); // Save to localStorage
+      localStorage.setItem("lastCity", searchCity);
+      if (coords) {
+        localStorage.setItem("lastCoords", JSON.stringify(coords));
+      } else {
+        localStorage.removeItem("lastCoords");
+      }
+
       setLoading(true);
       setError("");
 
       try {
-        const result = await fetchCurrentWeather(searchCity, unit);
-        const forecastData = await fetchForecast(searchCity, unit);
-        setWeather(result);
+        const weatherData = coords
+          ? await fetchWeatherByCoords(coords.lat, coords.lon, unit)
+          : await fetchCurrentWeather(searchCity, unit);
+
+        const forecastData = coords
+          ? await fetchForecastByCoords(coords.lat, coords.lon, unit)
+          : await fetchForecast(searchCity, unit);
+
+        setWeather(weatherData);
         setForecast(forecastData);
       } catch (err) {
         console.error(err);
@@ -68,16 +91,22 @@ export default function Home() {
 
   // When unit changes and city is known, re-fetch weather data
   useEffect(() => {
+    const savedCoords = localStorage.getItem("lastCoords");
     if (city) {
-      handleSearch(city);
+      if (savedCoords) {
+        const coords = JSON.parse(savedCoords);
+        handleSearch(city, coords);
+      } else {
+        handleSearch(city);
+      }
     }
   }, [unit, city, handleSearch]);
 
-  // Attempt to detect user's current city by coordinates and prompt switch
+  // Attempt to detect user's current city and ask to switch
   useEffect(() => {
     const tryAutoDetectCity = () => {
       if (typeof window === "undefined") return;
-      if (localStorage.getItem("lastCity")) return;
+      if (localStorage.getItem("lastCity")) return; // already set
 
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
@@ -88,21 +117,18 @@ export default function Home() {
               unit
             );
             const detectedCity = result.city;
-            const savedCity = localStorage.getItem("lastCity") || "";
 
-            if (
-              detectedCity &&
-              detectedCity.toLowerCase() !== savedCity.toLowerCase()
-            ) {
-              const confirmSwitch = window.confirm(
-                `You're in ${detectedCity}. Switch to this city's weather?`
-              );
-              if (confirmSwitch) {
-                handleSearch(detectedCity);
-              }
+            const confirmSwitch = window.confirm(
+              `You're in ${detectedCity}. Switch to this city's weather?`
+            );
+            if (confirmSwitch) {
+              handleSearch(detectedCity, {
+                lat: pos.coords.latitude,
+                lon: pos.coords.longitude,
+              });
             }
-          } catch (fetchErr) {
-            console.warn("Could not fetch weather by coordinates:", fetchErr);
+          } catch (err) {
+            console.warn("Could not fetch weather by coordinates:", err);
           }
         },
         () => {
@@ -151,27 +177,22 @@ export default function Home() {
         </span>
       </div>
 
-      <SearchBar onSearch={handleSearch} />
+      <SearchBar onSearch={(val) => handleSearch(val)} />
 
-      {/* Instructions for first-time users */}
       {!city && !loading && !weather && (
         <p className="mt-6 text-gray-600">Enter a city name to begin.</p>
       )}
 
-      {/* Loading spinner */}
       {loading && (
         <div className="mt-6 flex justify-center">
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
         </div>
       )}
 
-      {/* Display error message if any */}
       {error && <p className="mt-6 text-red-500">{error}</p>}
 
-      {/* Show current weather if data is available */}
       {weather && <CurrentWeatherCard data={weather} unit={unit} />}
 
-      {/* Show 5-day forecast */}
       {forecast.length > 0 && (
         <div className="mt-10 flex flex-col sm:flex-row sm:flex-wrap sm:justify-center gap-4 max-w-5xl mx-auto px-4">
           {forecast.map((item, index) => (
