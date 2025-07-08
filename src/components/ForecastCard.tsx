@@ -6,7 +6,7 @@ export default function ForecastCard({ data }: { data: ForecastData }) {
   });
 
   return (
-    <div className="bg-white p-3 rounded shadow text-center text-sm transition hover:shadow-md w-full sm:w-40 sm:text-sm flex sm:block items-center justify-between sm:justify-center gap-3 sm:gap-0">
+    <div className="bg-white p-3 rounded shadow text-center text-sm transition hover:shadow-md sm:text-sm flex sm:block items-center justify-between sm:justify-center gap-3 sm:gap-0">
       <p className="font-semibold w-16 sm:w-auto">{day}</p>
       <div className="flex flex-col items-center sm:my-2">
         <img

@@ -194,11 +194,12 @@ export default function Home() {
       {weather && <CurrentWeatherCard data={weather} unit={unit} />}
 
       {forecast.length > 0 && (
-        <div className="mt-10 flex flex-col sm:flex-row sm:flex-wrap sm:justify-center gap-4 max-w-5xl mx-auto px-4">
-          {forecast.map((item, index) => (
-            <ForecastCard key={index} data={item} />
-          ))}
-        </div>
+        <div className="mt-10 grid grid-cols-1 sm:grid-cols-5 gap-4 max-w-6xl mx-auto px-4">
+  {forecast.map((item, index) => (
+    <ForecastCard key={index} data={item} />
+  ))}
+</div>
+
       )}
     </main>
   );
