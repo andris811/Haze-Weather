@@ -2,13 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import SearchBar from "@/components/SearchBar";
-import {
-  fetchCurrentWeather,
-  fetchForecast,
-  fetchCurrentWeatherByCoords,
-  fetchForecastByCoords,
-  getCityFromCoords,
-} from "@/lib/api";
+import { fetchCurrentWeather, fetchForecast, fetchWeatherByCoords } from "@/lib/api";
 import CurrentWeatherCard from "@/components/CurrentWeatherCard";
 import ForecastCard from "@/components/ForecastCard";
 import { WeatherData, ForecastData } from "@/types";
@@ -27,15 +21,10 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [forecast, setForecast] = useState<ForecastData[]>([]);
   const [unit, setUnit] = useState<"metric" | "imperial">("metric");
-  const [detectedCity, setDetectedCity] = useState("");
-  const [showSwitchPrompt, setShowSwitchPrompt] = useState(false);
 
   // On initial load: get saved unit or auto-detect from locale
   useEffect(() => {
-    const savedUnit = localStorage.getItem("unit") as
-      | "metric"
-      | "imperial"
-      | null;
+    const savedUnit = localStorage.getItem("unit") as "metric" | "imperial" | null;
 
     if (savedUnit) {
       setUnit(savedUnit);
@@ -46,45 +35,6 @@ export default function Home() {
       localStorage.setItem("unit", autoUnit);
     }
   }, []);
-
-  // Auto-fetch user location on first load (only if no city saved)
-  useEffect(() => {
-    if (!city && typeof window !== "undefined" && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          setLoading(true);
-          setError("");
-
-          try {
-            const result = await fetchCurrentWeatherByCoords(
-              latitude,
-              longitude,
-              unit
-            );
-            const forecastData = await fetchForecastByCoords(
-              latitude,
-              longitude,
-              unit
-            );
-            setCity(result.city);
-            setWeather(result);
-            setForecast(forecastData);
-            localStorage.setItem("lastCity", result.city);
-          } catch (err) {
-            console.error(err);
-            setError("Could not fetch weather for your location.");
-          } finally {
-            setLoading(false);
-          }
-        },
-        (err) => {
-          console.warn("Geolocation failed:", err);
-          // No city fallback, wait for manual search
-        }
-      );
-    }
-  }, [city, unit]);
 
   // Persist unit setting to localStorage when it changes
   useEffect(() => {
@@ -116,39 +66,53 @@ export default function Home() {
     [unit]
   );
 
-  // On load, if a lastCity is saved, try to get the user's current city using geolocation.
-  // If the current city differs from the saved one, automatically update it by calling handleSearch.
-  // This ensures the weather always reflects the user's real location when visiting the site.
-  useEffect(() => {
-    const tryAutoDetectCity = async () => {
-      const savedCity = localStorage.getItem("lastCity") || "";
-
-      try {
-        navigator.geolocation.getCurrentPosition(async (pos) => {
-          const userCity = await getCityFromCoords(
-            pos.coords.latitude,
-            pos.coords.longitude
-          );
-
-          if (userCity && userCity.toLowerCase() !== savedCity.toLowerCase()) {
-            setDetectedCity(userCity); // Save detected city
-            setShowSwitchPrompt(true); // Show confirmation prompt
-          }
-        });
-      } catch {
-        console.warn("Geolocation failed or denied");
-      }
-    };
-
-    tryAutoDetectCity();
-  }, []);
-
   // When unit changes and city is known, re-fetch weather data
   useEffect(() => {
     if (city) {
       handleSearch(city);
     }
   }, [unit, city, handleSearch]);
+
+  // Attempt to detect user's current city by coordinates and prompt switch
+  useEffect(() => {
+    const tryAutoDetectCity = () => {
+      if (typeof window === "undefined") return;
+      if (localStorage.getItem("lastCity")) return;
+
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          try {
+            const result = await fetchWeatherByCoords(
+              pos.coords.latitude,
+              pos.coords.longitude,
+              unit
+            );
+            const detectedCity = result.city;
+            const savedCity = localStorage.getItem("lastCity") || "";
+
+            if (
+              detectedCity &&
+              detectedCity.toLowerCase() !== savedCity.toLowerCase()
+            ) {
+              const confirmSwitch = window.confirm(
+                `You're in ${detectedCity}. Switch to this city's weather?`
+              );
+              if (confirmSwitch) {
+                handleSearch(detectedCity);
+              }
+            }
+          } catch (fetchErr) {
+            console.warn("Could not fetch weather by coordinates:", fetchErr);
+          }
+        },
+        () => {
+          console.warn("Geolocation denied or failed");
+        }
+      );
+    };
+
+    tryAutoDetectCity();
+  }, [unit, handleSearch]);
 
   return (
     <main className="min-h-screen bg-gray-100 px-4 py-6 sm:px-6 sm:py-10 text-center">
@@ -186,32 +150,6 @@ export default function Home() {
           °F
         </span>
       </div>
-
-      {showSwitchPrompt && (
-        <div className="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded mb-4 max-w-xl mx-auto">
-          <p className="mb-2">
-            You&#39;re in <strong>{detectedCity}</strong>. Switch to this city&#39;s
-            weather?
-          </p>
-          <div className="flex justify-center gap-4">
-            <button
-              onClick={() => {
-                handleSearch(detectedCity);
-                setShowSwitchPrompt(false);
-              }}
-              className="px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Yes
-            </button>
-            <button
-              onClick={() => setShowSwitchPrompt(false)}
-              className="px-4 py-1 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
-            >
-              No
-            </button>
-          </div>
-        </div>
-      )}
 
       <SearchBar onSearch={handleSearch} />
 
