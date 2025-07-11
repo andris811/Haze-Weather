@@ -8,7 +8,7 @@ import {
   fetchWeatherByCoords,
 } from "@/lib/api";
 import CurrentWeatherCard from "@/components/CurrentWeatherCard";
-import ForecastCard from "@/components/ForecastCard";
+import ForecastPanel from "@/components/ForecastPanel";
 import { WeatherData, ForecastData } from "@/types";
 
 export default function Home() {
@@ -245,22 +245,11 @@ export default function Home() {
         </span>
       </div>
 
-      <SearchBar onSearch={(val) => handleSearch(val)} />
-
-      {/* use current location button */}
-      <button
-        onClick={checkLocation}
-        disabled={isDetectingLocation}
-        className={`mt-2 mb-4 inline-block rounded-full px-5 py-2 text-sm font-medium transition ${
-          isDetectingLocation
-            ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-            : "bg-[#4884AA] text-white hover:bg-[#01364e]"
-        }`}
-      >
-        {isDetectingLocation
-          ? "Detecting Location..."
-          : "Use My Current Location"}
-      </button>
+      <SearchBar
+        onSearch={(val) => handleSearch(val)}
+        onLocation={checkLocation}
+        isLocating={isDetectingLocation}
+      />
 
       {!city && !loading && !weather && !isDetectingLocation && (
         <p className="mt-6 text-gray-600">
@@ -281,12 +270,15 @@ export default function Home() {
         </div>
       )}
 
-      {weather && <CurrentWeatherCard data={weather} unit={unit} />}
+      {weather && (
+        <div className="mx-auto w-full max-w-md sm:max-w-lg md:max-w-xl px-4">
+          <CurrentWeatherCard data={weather} unit={unit} />
+        </div>
+      )}
+
       {forecast.length > 0 && (
-        <div className="mt-10 grid grid-cols-1 sm:grid-cols-5 gap-4 max-w-6xl mx-auto px-4">
-          {forecast.map((item, index) => (
-            <ForecastCard key={index} data={item} />
-          ))}
+        <div className="mx-auto w-full max-w-md sm:max-w-lg md:max-w-xl px-4 mt-6">
+          <ForecastPanel forecast={forecast} />
         </div>
       )}
     </main>
