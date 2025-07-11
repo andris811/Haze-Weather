@@ -32,6 +32,7 @@ export async function fetchCurrentWeather(
 
   return {
     city: data.name,
+    country: data.sys.country,
     temperature: Math.round(data.main.temp),
     feelsLike: Math.round(data.main.feels_like),
     minTemp: Math.round(data.main.temp_min),

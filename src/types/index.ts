@@ -1,5 +1,6 @@
 export type WeatherData = {
   city: string;
+  country?: string;
   temperature: number;
   feelsLike: number;
   minTemp: number;

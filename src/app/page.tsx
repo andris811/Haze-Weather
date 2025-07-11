@@ -23,7 +23,10 @@ export default function Home() {
 
   // Load unit from localStorage or use locale
   useEffect(() => {
-    const savedUnit = localStorage.getItem("unit") as "metric" | "imperial" | null;
+    const savedUnit = localStorage.getItem("unit") as
+      | "metric"
+      | "imperial"
+      | null;
     if (savedUnit) {
       setUnit(savedUnit);
     } else {
@@ -39,7 +42,10 @@ export default function Home() {
   }, [unit]);
 
   const handleSearch = useCallback(
-    async (searchCity: string, coords?: { lat: number; lon: number } | null) => {
+    async (
+      searchCity: string,
+      coords?: { lat: number; lon: number } | null
+    ) => {
       setCity(searchCity);
       localStorage.setItem("lastCity", searchCity);
 
@@ -96,77 +102,85 @@ export default function Home() {
     return R * c;
   };
 
- const checkLocation = useCallback(async () => {
-  if (typeof window === "undefined" || !("geolocation" in navigator)) {
-    setGeoError("Geolocation not supported");
-    return;
-  }
+  const checkLocation = useCallback(async () => {
+    if (typeof window === "undefined" || !("geolocation" in navigator)) {
+      setGeoError("Geolocation not supported");
+      return;
+    }
 
-  setIsDetectingLocation(true);
-  setGeoError("");
+    setIsDetectingLocation(true);
+    setGeoError("");
 
-  try {
-    const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0,
-      });
-    });
+    try {
+      const position = await new Promise<GeolocationPosition>(
+        (resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0,
+          });
+        }
+      );
 
-    const { latitude, longitude } = position.coords;
-    const currentCoords = { lat: latitude, lon: longitude };
-    const weatherData = await fetchWeatherByCoords(latitude, longitude, unit);
-    const currentCity = weatherData.city;
+      const { latitude, longitude } = position.coords;
+      const currentCoords = { lat: latitude, lon: longitude };
+      const weatherData = await fetchWeatherByCoords(latitude, longitude, unit);
+      const currentCity = weatherData.city;
 
-    const savedCity = localStorage.getItem("lastCity");
-    const savedCoords = localStorage.getItem("lastCoords");
+      const savedCity = localStorage.getItem("lastCity");
+      const savedCoords = localStorage.getItem("lastCoords");
 
-    const prevCoords = savedCoords ? JSON.parse(savedCoords) : null;
-    const distance = prevCoords ? getDistance(prevCoords, currentCoords) : 100;
+      const prevCoords = savedCoords ? JSON.parse(savedCoords) : null;
+      const distance = prevCoords
+        ? getDistance(prevCoords, currentCoords)
+        : 100;
 
-    if (!savedCity) {
-      localStorage.setItem("lastCity", currentCity);
-      localStorage.setItem("lastCoords", JSON.stringify(currentCoords));
-      setCity(""); // <-- force refresh
-      handleSearch(currentCity, currentCoords);
-    } else {
-      const confirmSwitch =
-        distance > 1
-          ? window.confirm(`You're currently in ${currentCity}. Switch to this location?`)
-          : false;
-
-      if (confirmSwitch) {
+      if (!savedCity) {
         localStorage.setItem("lastCity", currentCity);
         localStorage.setItem("lastCoords", JSON.stringify(currentCoords));
         setCity(""); // <-- force refresh
         handleSearch(currentCity, currentCoords);
       } else {
-        setCity(""); // <-- force refresh anyway
-        handleSearch(currentCity, currentCoords);
+        const confirmSwitch =
+          distance > 1
+            ? window.confirm(
+                `You're currently in ${currentCity}. Switch to this location?`
+              )
+            : false;
+
+        if (confirmSwitch) {
+          localStorage.setItem("lastCity", currentCity);
+          localStorage.setItem("lastCoords", JSON.stringify(currentCoords));
+          setCity(""); // <-- force refresh
+          handleSearch(currentCity, currentCoords);
+        } else {
+          setCity(""); // <-- force refresh anyway
+          handleSearch(currentCity, currentCoords);
+        }
       }
+    } catch (err) {
+      const error = err as GeolocationPositionError;
+      console.warn("Geolocation failed:", error);
+
+      let errorMessage = "Couldn't get your location.";
+      if (error.code === 1) {
+        errorMessage =
+          "Location permission denied. Please enable it in your browser settings.";
+      } else if (error.code === 2) {
+        errorMessage =
+          "Location unavailable. Check your internet or GPS connection.";
+      } else if (error.code === 3) {
+        errorMessage = "Location request timed out. Please try again.";
+      }
+
+      setGeoError(errorMessage);
+
+      const fallbackCity = localStorage.getItem("lastCity");
+      if (fallbackCity) handleSearch(fallbackCity);
+    } finally {
+      setIsDetectingLocation(false);
     }
-  } catch (err) {
-    const error = err as GeolocationPositionError;
-    console.warn("Geolocation failed:", error);
-
-    let errorMessage = "Couldn't get your location.";
-    if (error.code === 1) {
-      errorMessage = "Location permission denied. Please enable it in your browser settings.";
-    } else if (error.code === 2) {
-      errorMessage = "Location unavailable. Check your internet or GPS connection.";
-    } else if (error.code === 3) {
-      errorMessage = "Location request timed out. Please try again.";
-    }
-
-    setGeoError(errorMessage);
-
-    const fallbackCity = localStorage.getItem("lastCity");
-    if (fallbackCity) handleSearch(fallbackCity);
-  } finally {
-    setIsDetectingLocation(false);
-  }
-}, [unit, handleSearch]);
+  }, [unit, handleSearch]);
 
   // On first load: load saved city or use location
   useEffect(() => {
@@ -183,46 +197,75 @@ export default function Home() {
   }, [checkLocation]);
 
   return (
-    <main className="min-h-screen bg-gray-100 px-4 py-6 sm:px-6 sm:py-10 text-center">
-      <h1 className="text-3xl font-bold mb-4">Haze</h1>
+    <main className="min-h-screen bg-blue-100 px-4 py-8 sm:px-6 sm:py-12 text-center text-slate-800">
+      <div className="mb-6">
+        <h1
+          className="text-5xl font-extrabold tracking-wide"
+          style={{ color: "#014565" }}
+        >
+          HAZE <span className="text-white">WEATHER</span>
+        </h1>
+        <p className="mt-2 text-lg text-slate-700">
+          Your daily weather companion
+        </p>
+      </div>
 
       {/* Unit switcher */}
-      <div className="mb-4 flex justify-center items-center gap-4 text-sm">
-        <span className={`${unit === "metric" ? "font-bold text-black" : "text-gray-500"}`}>
+      <div className="mb-6 flex justify-center items-center gap-4 text-sm">
+        <span
+          className={`transition-colors ${
+            unit === "metric" ? "text-[#014565] font-semibold" : "text-gray-400"
+          }`}
+        >
           °C
         </span>
+
         <button
-          onClick={() => setUnit((prev) => (prev === "metric" ? "imperial" : "metric"))}
-          className="w-12 h-6 rounded-full relative bg-gray-300 flex items-center px-1"
+          onClick={() =>
+            setUnit((prev) => (prev === "metric" ? "imperial" : "metric"))
+          }
+          className="relative w-14 h-7 rounded-full bg-gray-300 p-1 transition-colors"
           aria-label="Toggle temperature unit"
         >
           <span
-            className={`w-4 h-4 bg-white rounded-full shadow transition-transform duration-300 ${
-              unit === "metric" ? "translate-x-0" : "translate-x-6"
+            className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-white shadow transition-transform duration-300 ${
+              unit === "metric" ? "translate-x-0" : "translate-x-7"
             }`}
           />
         </button>
-        <span className={`${unit === "imperial" ? "font-bold text-black" : "text-gray-500"}`}>
+
+        <span
+          className={`transition-colors ${
+            unit === "imperial"
+              ? "text-[#014565] font-semibold"
+              : "text-gray-400"
+          }`}
+        >
           °F
         </span>
       </div>
 
       <SearchBar onSearch={(val) => handleSearch(val)} />
 
+      {/* use current location button */}
       <button
         onClick={checkLocation}
         disabled={isDetectingLocation}
-        className={`mt-2 mb-4 px-4 py-2 rounded-md ${
+        className={`mt-2 mb-4 inline-block rounded-full px-5 py-2 text-sm font-medium transition ${
           isDetectingLocation
-            ? "bg-gray-300 cursor-not-allowed"
-            : "bg-blue-500 text-white hover:bg-blue-600"
+            ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+            : "bg-[#4884AA] text-white hover:bg-[#01364e]"
         }`}
       >
-        {isDetectingLocation ? "Detecting Location..." : "Use My Current Location"}
+        {isDetectingLocation
+          ? "Detecting Location..."
+          : "Use My Current Location"}
       </button>
 
       {!city && !loading && !weather && !isDetectingLocation && (
-        <p className="mt-6 text-gray-600">Enter a city name or use your current location</p>
+        <p className="mt-6 text-gray-600">
+          Enter a city name or use your current location
+        </p>
       )}
 
       {(loading || isDetectingLocation) && (

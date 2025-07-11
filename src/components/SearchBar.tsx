@@ -1,30 +1,28 @@
-'use client';
+import { useState } from "react";
 
-import { useState } from 'react';
-
-export default function SearchBar({ onSearch }: { onSearch: (city: string) => void }) {
-  const [city, setCity] = useState('');
+export default function SearchBar({ onSearch }: { onSearch: (value: string) => void }) {
+  const [input, setInput] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (city.trim()) {
-      onSearch(city.trim());
-      setCity('');
+    if (input.trim()) {
+      onSearch(input.trim());
+      setInput("");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex w-full max-w-md mx-auto mt-6 gap-2">
+    <form onSubmit={handleSubmit} className="mx-auto flex w-full max-w-md rounded-lg bg-white shadow-md overflow-hidden">
       <input
         type="text"
-        placeholder="Search for a city..."
-        value={city}
-        onChange={(e) => setCity(e.target.value)}
-        className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        placeholder="Enter city"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        className="w-full px-4 py-2 text-gray-700 focus:outline-none"
       />
       <button
         type="submit"
-        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+        className="bg-[#014565] text-white px-4 py-2 hover:bg-[#01364e] transition-colors"
       >
         Search
       </button>
