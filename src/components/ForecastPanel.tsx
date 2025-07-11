@@ -1,4 +1,5 @@
 import { ForecastData } from "@/types";
+import { getWeatherIconClass } from "@/lib/iconMap";
 
 export default function ForecastSection({
   forecast,
@@ -8,6 +9,8 @@ export default function ForecastSection({
   return (
     <div className="bg-[#4884AA] text-white rounded-2xl shadow-md p-4 w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto text-left">
       <h2 className="text-lg font-bold mb-4 text-left">5-Day Forecast</h2>
+
+      {/* Desktop layout */}
       <div className="hidden sm:flex justify-between">
         {forecast.map((data) => {
           const day = new Date(data.date).toLocaleDateString(undefined, {
@@ -20,10 +23,9 @@ export default function ForecastSection({
               className="flex flex-col items-center text-xs sm:text-sm gap-1"
             >
               <p>{day}</p>
-              <img
-                src={`https://openweathermap.org/img/wn/${data.icon}@2x.png`}
-                alt={data.description}
-                className="w-8 h-8 sm:w-10 sm:h-10"
+              <i
+                className={`wi ${getWeatherIconClass(data.icon)} text-xl sm:text-2xl`}
+                aria-hidden="true"
               />
               <p className="text-[11px] sm:text-xs">
                 {data.minTemp}° / {data.maxTemp}°
@@ -41,12 +43,14 @@ export default function ForecastSection({
           });
 
           return (
-            <div key={data.date} className="flex items-center justify-between">
+            <div
+              key={data.date}
+              className="flex items-center justify-between"
+            >
               <p className="w-12">{day}</p>
-              <img
-                src={`https://openweathermap.org/img/wn/${data.icon}@2x.png`}
-                alt={data.description}
-                className="w-8 h-8"
+              <i
+                className={`wi ${getWeatherIconClass(data.icon)} text-xl`}
+                aria-hidden="true"
               />
               <p className="text-sm font-medium">
                 {data.minTemp}° / {data.maxTemp}°

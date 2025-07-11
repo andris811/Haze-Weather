@@ -196,6 +196,8 @@ export default function Home() {
     }
   }, [checkLocation]);
 
+  // const todayForecast = forecast.length > 0 ? forecast[0] : null;
+
   return (
     <main className="min-h-screen bg-blue-100 px-4 py-8 sm:px-6 sm:py-12 text-center text-slate-800">
       <div className="mb-6">
@@ -270,9 +272,9 @@ export default function Home() {
         </div>
       )}
 
-      {weather && (
+      {weather && forecast.length > 0 && (
         <div className="mx-auto w-full max-w-md sm:max-w-lg md:max-w-xl px-4">
-          <CurrentWeatherCard data={weather} unit={unit} />
+          <CurrentWeatherCard data={weather} unit={unit} today={forecast[0]} />
         </div>
       )}
 

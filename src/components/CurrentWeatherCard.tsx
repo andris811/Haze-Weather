@@ -1,22 +1,26 @@
-import { WeatherData } from "@/types";
+import { WeatherData, ForecastData } from "@/types";
 import { formatTime } from "@/lib/utils";
+import { getWeatherIconClass } from "@/lib/iconMap";
 
 type Props = {
   data: WeatherData;
   unit: "metric" | "imperial";
+  today: ForecastData;
 };
 
-export default function CurrentWeatherCard({ data, unit }: Props) {
+export default function CurrentWeatherCard({ data, unit, today }: Props) {
   const tempSymbol = unit === "metric" ? "°C" : "°F";
 
   return (
     <div className="bg-[#014565] text-white rounded-2xl shadow-lg p-6 w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto mt-8">
       <div className="flex items-center gap-6 mb-6">
-        <img
-          src={`https://openweathermap.org/img/wn/${data.icon}@2x.png`}
-          alt={data.description}
-          className="w-32 h-32 shrink-0"
+        <i
+          className={`wi ${getWeatherIconClass(
+            data.icon
+          )} text-6xl sm:text-7xl md:text-8xl`}
+          aria-hidden="true"
         />
+
         <div className="flex flex-col">
           <h2 className="text-2xl font-bold mb-1">
             {data.city}
@@ -28,8 +32,6 @@ export default function CurrentWeatherCard({ data, unit }: Props) {
           </p>
           <p className="capitalize text-blue-100 text-sm">{data.description}</p>
         </div>
-    
-        
       </div>
 
       <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-sm text-blue-100 text-left">
@@ -38,8 +40,8 @@ export default function CurrentWeatherCard({ data, unit }: Props) {
           {tempSymbol}
         </p>
         <p>
-          <span className="font-semibold">Min/Max:</span> {data.minTemp}
-          {tempSymbol} / {data.maxTemp}
+          <span className="font-semibold">Min/Max:</span> {today.minTemp}
+          {tempSymbol} / {today.maxTemp}
           {tempSymbol}
         </p>
 
