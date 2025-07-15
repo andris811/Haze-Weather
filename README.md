@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌤️ HAZE Weather App
 
-## Getting Started
+**HAZE** is a modern, responsive weather application built with **Next.js** and **Tailwind CSS**. It provides accurate current weather data and a 5-day forecast using the **OpenWeatherMap API**.
 
-First, run the development server:
+Try it live: [HAZE Weather](haze-weather.vercel.app)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ✨ Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- 🔍 **City Search** – Enter any city to instantly see current weather and forecast.
+- 📍 **Use My Location** – Get weather data based on your real-time location.
+- 🧭 **5-Day Forecast** – Compact and clear daily forecasts with weather icons.
+- 💙 **Searched Locations** – Your previously searched cities are displayed below the forecast.
+- 🌡️ **Celsius/Fahrenheit Toggle** – Easily switch between metric and imperial units.
+- 💾 **Local Storage** – Saves your preferred temperature unit and last searched city.
+- 📱 **Mobile Friendly** – Responsive design with optimized layouts for small screens.
+- 🎨 **Clean UI** – Custom styling with FontAwesome and Weather Icons for visual clarity.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🛠️ Built With
 
-To learn more about Next.js, take a look at the following resources:
+- [Next.js](https://nextjs.org/) – App framework
+- [Tailwind CSS](https://tailwindcss.com/) – Styling
+- [Font Awesome](https://fontawesome.com/) – UI icons
+- [Weather Icons](https://erikflowers.github.io/weather-icons/) – Forecast visuals
+- [OpenWeatherMap API](https://openweathermap.org/api) – Weather data
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📦 Setup
 
-## Deploy on Vercel
+1. **Clone the repo**:
+   ```bash
+   git clone https://github.com/yourusername/haze-weather.git
+   cd haze-weather
+2. **Install dependencies**:
+    ```bash
+    npm install
+3. **Set your API key**:
+    Create a .env.local file and add:
+    ```env
+    NEXT_PUBLIC_OPENWEATHER_API_KEY=your_openweathermap_api_key
+4. &&Run the app**:
+    ```bash
+    npm run dev
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🧠 Developer Notes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Geolocation is only supported over HTTPS or localhost.
+- City searches automatically save to "searched locations".
+- Coordinates are saved temporarily for functionality, but no backend is used.
+
+## 📄 License
+MIT - Andras Varga, 2025
+```vbnet
+
+Let me know if you'd like a Hungarian or Chinese version too, or if you want it customized to your actual deployment URL and GitHub repo!

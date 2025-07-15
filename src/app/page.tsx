@@ -12,6 +12,7 @@ import ForecastPanel from "@/components/ForecastPanel";
 import { WeatherData, ForecastData } from "@/types";
 import FavoritesPanel from "@/components/FavoritesPanel";
 import Footer from "@/components/Footer";
+import { FavoriteCity } from "@/types";
 
 export default function Home() {
   const [city, setCity] = useState("");
@@ -44,60 +45,68 @@ export default function Home() {
   }, [unit]);
 
   const handleSearch = useCallback(
-  async (
-    searchCity: string,
-    coords?: { lat: number; lon: number } | null
-  ) => {
-    setCity(searchCity);
-    localStorage.setItem("lastCity", searchCity);
+    async (
+      searchCity: string,
+      coords?: { lat: number; lon: number } | null
+    ) => {
+      setCity(searchCity);
+      localStorage.setItem("lastCity", searchCity);
 
-    if (coords) {
-      localStorage.setItem("lastCoords", JSON.stringify(coords));
-      localStorage.setItem("lastLat", coords.lat.toString());
-      localStorage.setItem("lastLon", coords.lon.toString());
-    } else {
-      localStorage.removeItem("lastCoords");
-      localStorage.removeItem("lastLat");
-      localStorage.removeItem("lastLon");
-    }
-
-    setLoading(true);
-    setError("");
-    setGeoError("");
-    setForecast([]);
-
-    try {
-      const weatherData = coords
-        ? await fetchWeatherByCoords(coords.lat, coords.lon, unit)
-        : await fetchCurrentWeather(searchCity, unit);
-
-      const forecastData = await fetchForecast(weatherData.city, unit);
-
-      setWeather(weatherData);
-      setForecast(forecastData);
-
-      // ✅ Save to favorites if coordinates are provided
       if (coords) {
-        const existing = JSON.parse(localStorage.getItem("favorites") || "[]");
-        const isDuplicate = existing.some(
-          (fav: { city: string }) => fav.city === weatherData.city
-        );
-        if (!isDuplicate) {
-          existing.push({ city: weatherData.city, coords });
-          localStorage.setItem("favorites", JSON.stringify(existing));
-        }
+        localStorage.setItem("lastCoords", JSON.stringify(coords));
+        localStorage.setItem("lastLat", coords.lat.toString());
+        localStorage.setItem("lastLon", coords.lon.toString());
+      } else {
+        localStorage.removeItem("lastCoords");
+        localStorage.removeItem("lastLat");
+        localStorage.removeItem("lastLon");
       }
-    } catch (err) {
-      console.error(err);
-      setError("City not found");
-      setWeather(null);
+
+      setLoading(true);
+      setError("");
+      setGeoError("");
       setForecast([]);
-    } finally {
-      setLoading(false);
-    }
-  },
-  [unit]
-);
+
+      try {
+        const weatherData = coords
+          ? await fetchWeatherByCoords(coords.lat, coords.lon, unit)
+          : await fetchCurrentWeather(searchCity, unit);
+
+        const forecastData = await fetchForecast(weatherData.city, unit);
+
+        setWeather(weatherData);
+        setForecast(forecastData);
+
+        // ✅ Save to history if coordinates are provided
+        const coordSource =
+          coords ??
+          (weatherData.lat && weatherData.lon
+            ? { lat: weatherData.lat, lon: weatherData.lon }
+            : null);
+
+        if (coordSource) {
+          const existing: FavoriteCity[] = JSON.parse(
+            localStorage.getItem("favorites") || "[]"
+          );
+          const isDuplicate = existing.some(
+            (fav) => fav.city === weatherData.city
+          );
+          if (!isDuplicate) {
+            existing.push({ city: weatherData.city, coords: coordSource });
+            localStorage.setItem("favorites", JSON.stringify(existing));
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        setError("City not found");
+        setWeather(null);
+        setForecast([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [unit]
+  );
 
   const getDistance = (
     coord1: { lat: number; lon: number },
@@ -208,9 +217,7 @@ export default function Home() {
     } else {
       checkLocation();
     }
-  }, [checkLocation]);
-
-  // const todayForecast = forecast.length > 0 ? forecast[0] : null;
+  }, [checkLocation, handleSearch]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -311,3 +318,4 @@ export default function Home() {
     </div>
   );
 }
+

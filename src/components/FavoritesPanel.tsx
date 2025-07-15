@@ -60,7 +60,7 @@ export default function FavoritesPanel({ onSelect, unit }: Props) {
   return (
     <div className="mt-10 w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto">
       <h2 className="text-lg font-semibold mb-4 text-[#014565]">
-        Saved Locations
+        Searched Locations
       </h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
