@@ -10,6 +10,7 @@ import {
 import CurrentWeatherCard from "@/components/CurrentWeatherCard";
 import ForecastPanel from "@/components/ForecastPanel";
 import { WeatherData, ForecastData } from "@/types";
+import Footer from "@/components/Footer";
 
 export default function Home() {
   const [city, setCity] = useState("");
@@ -199,7 +200,8 @@ export default function Home() {
   // const todayForecast = forecast.length > 0 ? forecast[0] : null;
 
   return (
-    <main className="min-h-screen bg-blue-100 px-4 py-8 sm:px-6 sm:py-12 text-center text-slate-800">
+    <div className="min-h-screen flex flex-col">
+    <main className="flex-grow bg-blue-100 px-4 py-8 sm:px-6 sm:py-12 text-center text-slate-800">
       <div className="mb-6">
         <h1
           className="text-5xl font-extrabold tracking-wide"
@@ -283,6 +285,9 @@ export default function Home() {
           <ForecastPanel forecast={forecast} />
         </div>
       )}
+
     </main>
+      <Footer />
+    </div>
   );
 }
