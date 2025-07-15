@@ -10,6 +10,7 @@ import {
 import CurrentWeatherCard from "@/components/CurrentWeatherCard";
 import ForecastPanel from "@/components/ForecastPanel";
 import { WeatherData, ForecastData } from "@/types";
+import FavoritesPanel from "@/components/FavoritesPanel";
 import Footer from "@/components/Footer";
 
 export default function Home() {
@@ -43,48 +44,60 @@ export default function Home() {
   }, [unit]);
 
   const handleSearch = useCallback(
-    async (
-      searchCity: string,
-      coords?: { lat: number; lon: number } | null
-    ) => {
-      setCity(searchCity);
-      localStorage.setItem("lastCity", searchCity);
+  async (
+    searchCity: string,
+    coords?: { lat: number; lon: number } | null
+  ) => {
+    setCity(searchCity);
+    localStorage.setItem("lastCity", searchCity);
 
+    if (coords) {
+      localStorage.setItem("lastCoords", JSON.stringify(coords));
+      localStorage.setItem("lastLat", coords.lat.toString());
+      localStorage.setItem("lastLon", coords.lon.toString());
+    } else {
+      localStorage.removeItem("lastCoords");
+      localStorage.removeItem("lastLat");
+      localStorage.removeItem("lastLon");
+    }
+
+    setLoading(true);
+    setError("");
+    setGeoError("");
+    setForecast([]);
+
+    try {
+      const weatherData = coords
+        ? await fetchWeatherByCoords(coords.lat, coords.lon, unit)
+        : await fetchCurrentWeather(searchCity, unit);
+
+      const forecastData = await fetchForecast(weatherData.city, unit);
+
+      setWeather(weatherData);
+      setForecast(forecastData);
+
+      // ✅ Save to favorites if coordinates are provided
       if (coords) {
-        localStorage.setItem("lastCoords", JSON.stringify(coords));
-        localStorage.setItem("lastLat", coords.lat.toString());
-        localStorage.setItem("lastLon", coords.lon.toString());
-      } else {
-        localStorage.removeItem("lastCoords");
-        localStorage.removeItem("lastLat");
-        localStorage.removeItem("lastLon");
+        const existing = JSON.parse(localStorage.getItem("favorites") || "[]");
+        const isDuplicate = existing.some(
+          (fav: { city: string }) => fav.city === weatherData.city
+        );
+        if (!isDuplicate) {
+          existing.push({ city: weatherData.city, coords });
+          localStorage.setItem("favorites", JSON.stringify(existing));
+        }
       }
-
-      setLoading(true);
-      setError("");
-      setGeoError("");
+    } catch (err) {
+      console.error(err);
+      setError("City not found");
+      setWeather(null);
       setForecast([]);
-
-      try {
-        const weatherData = coords
-          ? await fetchWeatherByCoords(coords.lat, coords.lon, unit)
-          : await fetchCurrentWeather(searchCity, unit);
-
-        const forecastData = await fetchForecast(weatherData.city, unit);
-
-        setWeather(weatherData);
-        setForecast(forecastData);
-      } catch (err) {
-        console.error(err);
-        setError("City not found");
-        setWeather(null);
-        setForecast([]);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [unit]
-  );
+    } finally {
+      setLoading(false);
+    }
+  },
+  [unit]
+);
 
   const getDistance = (
     coord1: { lat: number; lon: number },
@@ -201,92 +214,99 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
-    <main className="flex-grow bg-blue-100 px-4 py-8 sm:px-6 sm:py-12 text-center text-slate-800">
-      <div className="mb-6">
-        <h1
-          className="text-5xl font-extrabold tracking-wide"
-          style={{ color: "#014565" }}
-        >
-          HAZE <span className="text-white">WEATHER</span>
-        </h1>
-        <p className="mt-2 text-lg text-slate-700">
-          Your daily weather companion
-        </p>
-      </div>
+      <main className="flex-grow bg-blue-100 px-4 py-8 sm:px-6 sm:py-12 text-center text-slate-800">
+        <div className="mb-6">
+          <h1
+            className="text-5xl font-extrabold tracking-wide"
+            style={{ color: "#014565" }}
+          >
+            HAZE <span className="text-white">WEATHER</span>
+          </h1>
+          <p className="mt-2 text-lg text-slate-700">
+            Your daily weather companion
+          </p>
+        </div>
 
-      {/* Unit switcher */}
-      <div className="mb-6 flex justify-center items-center gap-4 text-sm">
-        <span
-          className={`transition-colors ${
-            unit === "metric" ? "text-[#014565] font-semibold" : "text-gray-400"
-          }`}
-        >
-          °C
-        </span>
-
-        <button
-          onClick={() =>
-            setUnit((prev) => (prev === "metric" ? "imperial" : "metric"))
-          }
-          className="relative w-14 h-7 rounded-full bg-gray-300 p-1 transition-colors"
-          aria-label="Toggle temperature unit"
-        >
+        {/* Unit switcher */}
+        <div className="mb-6 flex justify-center items-center gap-4 text-sm">
           <span
-            className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-white shadow transition-transform duration-300 ${
-              unit === "metric" ? "translate-x-0" : "translate-x-7"
+            className={`transition-colors ${
+              unit === "metric"
+                ? "text-[#014565] font-semibold"
+                : "text-gray-400"
             }`}
-          />
-        </button>
+          >
+            °C
+          </span>
 
-        <span
-          className={`transition-colors ${
-            unit === "imperial"
-              ? "text-[#014565] font-semibold"
-              : "text-gray-400"
-          }`}
-        >
-          °F
-        </span>
-      </div>
+          <button
+            onClick={() =>
+              setUnit((prev) => (prev === "metric" ? "imperial" : "metric"))
+            }
+            className="relative w-14 h-7 rounded-full bg-gray-300 p-1 transition-colors"
+            aria-label="Toggle temperature unit"
+          >
+            <span
+              className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-white shadow transition-transform duration-300 ${
+                unit === "metric" ? "translate-x-0" : "translate-x-7"
+              }`}
+            />
+          </button>
 
-      <SearchBar
-        onSearch={(val) => handleSearch(val)}
-        onLocation={checkLocation}
-        isLocating={isDetectingLocation}
-      />
-
-      {!city && !loading && !weather && !isDetectingLocation && (
-        <p className="mt-6 text-gray-600">
-          Enter a city name or use your current location
-        </p>
-      )}
-
-      {(loading || isDetectingLocation) && (
-        <div className="mt-6 flex justify-center">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+          <span
+            className={`transition-colors ${
+              unit === "imperial"
+                ? "text-[#014565] font-semibold"
+                : "text-gray-400"
+            }`}
+          >
+            °F
+          </span>
         </div>
-      )}
 
-      {error && <p className="mt-6 text-red-500">{error}</p>}
-      {geoError && (
-        <div className="mt-6 p-3 bg-yellow-100 text-yellow-800 rounded-md max-w-md mx-auto">
-          {geoError}
-        </div>
-      )}
+        <SearchBar
+          onSearch={(val) => handleSearch(val)}
+          onLocation={checkLocation}
+          isLocating={isDetectingLocation}
+        />
 
-      {weather && forecast.length > 0 && (
-        <div className="mx-auto w-full max-w-md sm:max-w-lg md:max-w-xl px-4">
-          <CurrentWeatherCard data={weather} unit={unit} today={forecast[0]} />
-        </div>
-      )}
+        {!city && !loading && !weather && !isDetectingLocation && (
+          <p className="mt-6 text-gray-600">
+            Enter a city name or use your current location
+          </p>
+        )}
 
-      {forecast.length > 0 && (
-        <div className="mx-auto w-full max-w-md sm:max-w-lg md:max-w-xl px-4 mt-6">
-          <ForecastPanel forecast={forecast} />
-        </div>
-      )}
+        {(loading || isDetectingLocation) && (
+          <div className="mt-6 flex justify-center">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+          </div>
+        )}
 
-    </main>
+        {error && <p className="mt-6 text-red-500">{error}</p>}
+        {geoError && (
+          <div className="mt-6 p-3 bg-yellow-100 text-yellow-800 rounded-md max-w-md mx-auto">
+            {geoError}
+          </div>
+        )}
+
+        {weather && forecast.length > 0 && (
+          <div className="mx-auto w-full max-w-md sm:max-w-lg md:max-w-xl px-4">
+            <CurrentWeatherCard
+              data={weather}
+              unit={unit}
+              today={forecast[0]}
+            />
+          </div>
+        )}
+
+        {forecast.length > 0 && (
+          <div className="mx-auto w-full max-w-md sm:max-w-lg md:max-w-xl px-4 mt-6">
+            <ForecastPanel forecast={forecast} />
+          </div>
+        )}
+
+        <FavoritesPanel onSelect={handleSearch} unit={unit} />
+      </main>
       <Footer />
     </div>
   );

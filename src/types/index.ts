@@ -22,3 +22,8 @@ export type ForecastData = {
   description: string;
   icon: string;
 };
+
+export type FavoriteCity = {
+  city: string;
+  coords: { lat: number; lon: number };
+};
