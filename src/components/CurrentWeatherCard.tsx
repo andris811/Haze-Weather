@@ -82,7 +82,7 @@ export default function CurrentWeatherCard({ data, unit, today }: Props) {
             </div>
             <button
               onClick={toggleFavorite}
-              className="text-white hover:text-red-500 transition"
+              className="text-white hover:text-red-500 transition hidden"
               aria-label="Toggle Favorite"
             >
               <FontAwesomeIcon icon={isFavorite ? solidHeart : regularHeart} />
